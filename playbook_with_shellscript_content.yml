@@ -1,0 +1,21 @@
+---
+- name: Embed and copy script.sh to remote servers
+  hosts: all
+  become: yes
+
+  tasks:
+  - name: Ensure the directory /apps/devops/ exists
+    file:
+      path: /apps/devops/
+      state: directory
+      mode: '0755'
+
+  - name: Create script.sh on remote servers with embedded content
+    copy:
+      content: |
+        #!/bin/bash
+        echo "xxxx"
+        echo "yyyy"
+        # Do zzzz
+      dest: /apps/devops/script.sh
+      mode: '0755'
