@@ -1,0 +1,63 @@
+---
+- name: Generate Application Version Report
+  hosts: all
+  become: yes # Many version commands might require elevated privileges.
+  tasks:
+
+  - name: Get Python version
+    command: python --version
+    ignore_errors: yes # If python isn't installed
+    register: python_version
+    changed_when: false
+
+  - name: Get Splunk version
+    command: splunk version
+    ignore_errors: yes
+    register: splunk_version
+    changed_when: false
+
+  - name: Get Apache version
+    command: httpd -v
+    ignore_errors: yes
+    register: apache_version
+    changed_when: false
+
+  - name: Get Tomcat version
+    command: catalina.sh version
+    ignore_errors: yes
+    register: tomcat_version
+    changed_when: false
+
+  - name: Get Oracle version
+    shell: echo 'select * from v$version;' | sqlplus -s / as sysdba
+    ignore_errors: yes
+    register: oracle_version
+    changed_when: false
+
+  - name: Get Java version
+    command: java -version
+    ignore_errors: yes
+    register: java_version
+    changed_when: false
+
+  - name: Get Linux distribution
+    setup:
+    register: os_info
+
+  - name: Consolidate results
+    set_fact:
+      report_content: |
+        Python Version: {{ python_version.stdout }}
+        Splunk Version: {{ splunk_version.stdout }}
+        Apache Version: {{ apache_version.stdout_lines[0] }} # typically, the first line has the version
+        Tomcat Version: {{ tomcat_version.stdout }}
+        Oracle Version: {{ oracle_version.stdout }}
+        Java Version: {{ java_version.stderr_lines[0] }} # Java writes its version to stderr
+        Linux Version: {{ os_info.ansible_distribution }} {{ os_info.ansible_distribution_version }}
+    delegate_to: localhost
+
+  - name: Write report to /tmp/report/host-application-running-version.info.txt
+    copy:
+      content: "{{ report_content }}"
+      dest: "/tmp/report/{{ inventory_hostname }}-application-running-version.info.txt"
+    delegate_to: localhost
