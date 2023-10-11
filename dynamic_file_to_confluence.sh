@@ -5,7 +5,7 @@ FILE_PATH="/path/to/your/dynamic/file.txt"
 CONFLUENCE_URL="https://yourconfluenceinstance.atlassian.net/wiki"
 PAGE_ID="YOUR_PAGE_ID"
 USERNAME="your@email.com"
-API_TOKEN="YOUR_API_TOKEN"
+API_TOKEN="ATATT3xFfGF0JoNyqK-Y-2phQ0C5qswjMrXP-qafALvMZFfHfZrsbPGVlndPMQj729aEdhzFlxfnuAWTCOEabndPzw8v1LoRPeuA4C35SuvGGw4gzakI_2n59qsrGJMbaYs1Uig-CBasweunoEQ8ZXPnbgIWIKPCHll6Qlbe8UYACQGmIoBVElA=13E775BC"
 SPACE_KEY="YOUR_SPACE_KEY"
 
 # Read file content
