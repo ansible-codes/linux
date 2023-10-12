@@ -1,0 +1,35 @@
+---
+- name: Execute Task and Post Results to Confluence
+  hosts: localhost
+  tasks:
+    - name: Print hello
+      command: echo "Hello, Ansible!"
+      register: result
+      
+    - name: Get current Confluence page version
+      uri:
+        url: "https://YOUR_CONFLUENCE_URL/rest/api/content/PAGE_ID"
+        method: GET
+        user: YOUR_CONFLUENCE_USERNAME
+        password: YOUR_CONFLUENCE_PASSWORD
+        return_content: yes
+      register: page_data
+      
+    - name: Post to Confluence Wiki
+      uri:
+        url: "https://YOUR_CONFLUENCE_URL/rest/api/content/PAGE_ID"
+        method: PUT
+        user: YOUR_CONFLUENCE_USERNAME
+        password: YOUR_CONFLUENCE_PASSWORD
+        headers:
+          Content-Type: "application/json"
+        body_format: json
+        body: 
+          version:
+            number: "{{ (page_data.json.version.number | int) + 1 }}"
+          title: "Your Page Title"
+          type: "page"
+          body:
+            storage:
+              value: "{{ result.stdout }}"
+              representation: "storage"
