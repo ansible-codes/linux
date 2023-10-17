@@ -22,13 +22,17 @@
         - adhoc
       tags: directory_setup
 
-    - name: Execute griffin-DB_conf_report.sh and log output
-      ansible.builtin.shell: "/app/devops/bin/griffin-DB_conf_report.sh"
+    - name: Execute oracle-DB_conf_report.sh and log output
+      ansible.builtin.shell: "/app/devops/bin/oracle-DB_conf_report.sh"
       register: script_output
+      failed_when: >
+        ("No such file or directory" in ret.stdout) or
+        (ret.stderr != '') or
+        (ret.rc == 10)
 
     - name: Save script output to log file
       ansible.builtin.copy:
         content: "{{ script_output.stdout }}"
-        dest: "/app/devops/log/griffin-DB_conf_report.log"
+        dest: "/app/devops/log/oracle-DB_conf_report.log"
         mode: '0644'
       tags: script_execution
