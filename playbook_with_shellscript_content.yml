@@ -1,34 +1,21 @@
 ---
-- name: Setup directories and execute script on remote Linux server
-  hosts: your_target_host_group_or_hostname
-  become: yes  # Ensure elevated privileges
+- name: Embed and copy script.sh to remote servers
+  hosts: all
+  become: yes
 
   tasks:
-    - name: Create main directory
-      ansible.builtin.file:
-        path: /app/devops_admin
-        state: directory
-        mode: '0755'
-      tags: directory_setup
+  - name: Ensure the directory /apps/devops/ exists
+    file:
+      path: /apps/devops/
+      state: directory
+      mode: '0755'
 
-    - name: Create subdirectories (bin, log, adhoc)
-      ansible.builtin.file:
-        path: "/app/devops_admin/{{ item }}"
-        state: directory
-        mode: '0755'
-      loop:
-        - bin
-        - log
-        - adhoc
-      tags: directory_setup
-
-    - name: Execute griffin-DB_conf_report.sh and log output
-      ansible.builtin.shell: "/app/devops/bin/griffin-DB_conf_report.sh"
-      register: script_output
-
-    - name: Save script output to log file
-      ansible.builtin.copy:
-        content: "{{ script_output.stdout }}"
-        dest: "/app/devops/log/griffin-DB_conf_report.log"
-        mode: '0644'
-      tags: script_execution
+  - name: Create script.sh on remote servers with embedded content
+    copy:
+      content: |
+        #!/bin/bash
+        echo "xxxx"
+        echo "yyyy"
+        # Do zzzz
+      dest: /apps/devops/script.sh
+      mode: '0755'
