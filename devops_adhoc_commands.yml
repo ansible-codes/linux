@@ -1,0 +1,29 @@
+---
+- name: Execute commands from command_list.txt in sequence on remote servers and log output
+  hosts: your_target_host_group_or_hostname
+  become: yes  # if you need elevated privileges to run the commands
+  gather_facts: no  # speed up the playbook by skipping gathering facts
+
+  tasks:
+    - name: Read the command list
+      ansible.builtin.slurp:
+        src: /path/on/remote/server/to/command_list.txt
+      register: command_file_content
+
+    - name: Convert the content to a list of commands
+      set_fact:
+        command_list: "{{ command_file_content['content'] | b64decode | split('\n') | select('search', '.') | list }}"
+
+    - name: Execute commands in sequence on remote Linux servers
+      command:
+        cmd: "{{ item }}"
+      register: command_results
+      with_items: "{{ command_list }}"
+
+    - name: Log command outputs to commands_execution.log on Ansible controller
+      delegate_to: localhost
+      ansible.builtin.lineinfile:
+        path: "/path/on/ansible/controller/commands_execution.log"
+        line: "Command on {{ inventory_hostname }}: {{ item.item }} | Result: {{ item.stdout }} | Error: {{ item.stderr }}"
+      with_items: "{{ command_results.results }}"
+      when: command_results is defined and command_results.results is iterable
