@@ -1,0 +1,52 @@
+---
+- name: Red Hat Linux Health Check
+  hosts: redhat_servers
+  tasks:
+    - name: Check disk usage
+      shell: df -h
+      register: disk_usage
+      changed_when: False
+
+    - name: Display disk usage
+      debug:
+        msg: "{{ disk_usage.stdout_lines }}"
+
+    - name: Check memory usage
+      shell: free -m
+      register: memory_usage
+      changed_when: False
+
+    - name: Display memory usage
+      debug:
+        msg: "{{ memory_usage.stdout_lines }}"
+
+    - name: Check load average
+      shell: uptime
+      register: load_avg
+      changed_when: False
+
+    - name: Display load average
+      debug:
+        msg: "{{ load_avg.stdout }}"
+
+    - name: Check if essential services are running (example: httpd and sshd)
+      shell: systemctl is-active {{ item }}
+      with_items:
+        - httpd
+        - sshd
+      register: service_status
+      changed_when: False
+
+    - name: Display service status
+      debug:
+        msg: "Service {{ item.item }} is {{ item.stdout }}"
+      with_items: "{{ service_status.results }}"
+
+    - name: Get status of all running services
+      shell: systemctl list-units --type=service --state=running --no-pager
+      register: all_services
+      changed_when: False
+
+    - name: Display status of all running services
+      debug:
+        msg: "{{ all_services.stdout_lines }}"
