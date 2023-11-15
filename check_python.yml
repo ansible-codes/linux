@@ -1,0 +1,21 @@
+---
+- name: Check Python Version and Environment Variables
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Check Python Version
+      command: python --version
+      register: python_version
+
+    - name: Display Python Version
+      debug:
+        msg: "Python version on {{ inventory_hostname }} is {{ python_version.stdout }}"
+
+    - name: Get Python Environment Variables
+      command: python -c 'import os; print(os.environ)'
+      register: python_env_vars
+
+    - name: Display Python Environment Variables
+      debug:
+        msg: "Python environment variables on {{ inventory_hostname }} are {{ python_env_vars.stdout }}"
