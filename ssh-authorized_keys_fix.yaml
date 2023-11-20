@@ -1,0 +1,54 @@
+---
+- name: Execute Linux commands and perform directory and file checks
+  hosts: your_target_hosts
+  become: yes  # Only use 'become' if you need to execute tasks as a superuser
+  tasks:
+    - name: Execute 'hostname -a'
+      command: hostname -a
+      register: hostname_output
+
+    - name: Execute 'ls -l'
+      command: ls -l
+      register: ls_output
+
+    - name: Execute 'date'
+      command: date
+      register: date_output
+
+    - name: Execute 'cp -p'
+      command: cp -p /path/to/source /path/to/destination
+      # Replace '/path/to/source' and '/path/to/destination' with actual paths
+
+    - name: Check if directory 'dir1' exists
+      stat: 
+        path: /path/to/dir1
+      register: dir1_stat
+      # Replace '/path/to/dir1' with the actual path of 'dir1'
+
+    - name: Check if directory 'dir2' exists
+      stat: 
+        path: /path/to/dir2
+      register: dir2_stat
+      # Replace '/path/to/dir2' with the actual path of 'dir2'
+
+    - name: Check if directory 'dir3' exists
+      stat: 
+        path: /path/to/dir3
+      register: dir3_stat
+      # Replace '/path/to/dir3' with the actual path of 'dir3'
+
+    - name: Check permissions of '/ssh/authorized_keys'
+      stat: 
+        path: /ssh/authorized_keys
+      register: ssh_auth_keys_stat
+
+    - name: Display command outputs
+      debug:
+        msg: 
+          - "Hostname output: {{ hostname_output.stdout }}"
+          - "LS output: {{ ls_output.stdout }}"
+          - "Date output: {{ date_output.stdout }}"
+          - "Dir1 exists: {{ dir1_stat.stat.exists }}"
+          - "Dir2 exists: {{ dir2_stat.stat.exists }}"
+          - "Dir3 exists: {{ dir3_stat.stat.exists }}"
+          - "'/ssh/authorized_keys' permissions: {{ ssh_auth_keys_stat.stat.mode }}"
