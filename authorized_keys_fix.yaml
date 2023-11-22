@@ -1,0 +1,33 @@
+---
+- name: Adicionar linha no início do arquivo authorized_keys e exibir alterações
+  hosts: all
+  become: yes  # Use 'become' apenas se necessário para obter privilégios de superusuário
+  tasks:
+    - name: Verificar se a linha já existe no arquivo
+      command: grep -q 'from="10.10.10.10"' /home/.ssh/authorized_keys
+      register: grep
+      ignore_errors: yes
+
+    - name: Adicionar 'from="10.10.10.10"' no início do arquivo se não estiver presente
+      block:
+        - name: Salvar o conteúdo do arquivo em uma variável
+          command: cat /home/.ssh/authorized_keys
+          register: authorized_keys_content
+
+        - name: Adicionar a linha no início do arquivo
+          lineinfile:
+            path: /home/.ssh/authorized_keys
+            line: "{{ item }}"
+            insertafter: BOF
+          loop:
+            - 'from="10.10.10.10"'
+            - "{{ authorized_keys_content.stdout }}"
+      when: grep.rc != 0
+
+    - name: Exibir o conteúdo atualizado do arquivo authorized_keys
+      command: cat /home/.ssh/authorized_keys
+      register: updated_content
+
+    - name: Mostrar a alteração no arquivo
+      debug:
+        msg: "{{ updated_content.stdout }}"
