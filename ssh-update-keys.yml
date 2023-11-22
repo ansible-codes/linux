@@ -1,0 +1,23 @@
+---
+- name: Backup and replace authorized_keys content
+  hosts: all
+  become: yes  # Only if needed to obtain superuser privileges
+  tasks:
+    - name: Backup /ssh/user/authorized_keys
+      copy:
+        src: /ssh/user/authorized_keys
+        dest: /ssh/user/authorized_keys.backup
+        remote_src: yes
+
+    - name: Replace content of /ssh/user/authorized_keys
+      copy:
+        content: "text_and_numbers"
+        dest: /ssh/user/authorized_keys
+
+    - name: Display the content of /ssh/user/authorized_keys
+      command: cat /ssh/user/authorized_keys
+      register: updated_content
+
+    - name: Show the updated content
+      debug:
+        msg: "{{ updated_content.stdout }}"
