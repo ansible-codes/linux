@@ -1,0 +1,12 @@
+---
+- name: Execute Linux commands
+  hosts: "{{ target_host }}"
+  vars:
+    target_host: "default_host"
+
+  tasks:
+    - name: Restart Apache Tomcat
+      command: /app/python-ve/bin/supervisorctl -c /app/supervisord.conf restart apache_tomcat
+
+    - name: Restart Apache HTTPD
+      command: /app/python-ve/bin/supervisorctl -c /app/supervisord.conf restart apache_httpd
