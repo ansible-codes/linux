@@ -1,6 +1,9 @@
 #!/bin/bash
 
-file_path="/path/to/your/file/RepointDB_responseFile.txt"
+# Get the current path
+current_path=$(pwd)
+
+file_path="$current_path/RepointDB_responseFile.txt"
 
 # Check if the file is empty
 if [ ! -s "$file_path" ]; then
@@ -18,11 +21,18 @@ do
     # Remove spaces from key
     key=$(echo "$key" | tr -d ' ')
 
+    # Check if the value is empty
+    if [ -z "$value" ]; then
+        echo "Error: Parameter '$key' is empty."
+        exit 1
+    fi
+
     # Assign the value to the variable named as key
     eval "$key=\"$value\""
 done < "$file_path"
 
 # Example: Print all variables
+echo "Current Path: $current_path"
 echo "Griffin_Jira_number: $Griffin_Jira_number"
 echo "Point_to_UI_host: $Point_to_UI_host"
 echo "GriffinDB_host: $GriffinDB_host"
