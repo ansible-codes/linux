@@ -1,5 +1,13 @@
 #!/bin/bash
 
+file_path="/path/to/your/file/RepointDB_responseFile.txt"
+
+# Check if the file is empty
+if [ ! -s "$file_path" ]; then
+    echo "Error: The file is empty."
+    exit 1
+fi
+
 # Read the file line by line
 while IFS= read -r line
 do
@@ -12,9 +20,9 @@ do
 
     # Assign the value to the variable named as key
     eval "$key=\"$value\""
-done < /path/to/your/file/RepointDB_responseFile.txt
+done < "$file_path"
 
-# Example: Print the variables
+# Example: Print all variables
 echo "Griffin_Jira_number: $Griffin_Jira_number"
 echo "Point_to_UI_host: $Point_to_UI_host"
 echo "GriffinDB_host: $GriffinDB_host"
@@ -23,3 +31,4 @@ echo "GriffinDB_credentials: $GriffinDB_credentials"
 echo "GriffinAnalyticsDB_host: $GriffinAnalyticsDB_host"
 echo "GriffinAnalyticsDB_name: $GriffinAnalyticsDB_name"
 echo "GriffinAnalyticsDB_credentials: $GriffinAnalyticsDB_credentials"
+# ... (continue with other variables as required)
