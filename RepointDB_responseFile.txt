@@ -1,0 +1,8 @@
+Griffin_Jira_number:
+Point_to_UI_host:
+GriffinDB_host:
+GriffinDB_name:
+GriffinDB_credentials:
+GriffinAnalyticsDB_host:
+GriffinAnalyticsDB_name:
+GriffinAnalyticsDB_credentials:
