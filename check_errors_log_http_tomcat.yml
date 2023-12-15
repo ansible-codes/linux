@@ -1,0 +1,26 @@
+---
+- name: Search Apache and Tomcat Error Logs
+  hosts: web_servers
+  tasks:
+    - name: Find log files modified in the last 5 minutes
+      find:
+        paths: /app/supervisor/logs
+        patterns: '*.log'
+        age: 5m
+        age_stamp: mtime
+      register: recent_log_files
+
+    - name: Check for common Apache and Tomcat errors in recent logs
+      ansible.builtin.shell: |
+        if grep -E "404|500|503|403|400|502|408|401|410|NullPointerException|ClassNotFoundException|SQLException|ConnectException|BindException|ServletException|LifecycleException|DeploymentException" {{ item.path }}; then
+          exit 1
+        fi
+      loop: "{{ recent_log_files.files }}"
+      register: grep_output
+      ignore_errors: true
+      changed_when: false
+
+    - name: Fail the job if errors are found in any log file
+      ansible.builtin.fail:
+        msg: "Errors found in log files"
+      when: grep_output.results | someattr('rc == 1')
