@@ -1,11 +1,10 @@
----
 - name: Search Apache and Tomcat Error Logs
-  hosts: web_servers
+  hosts: all
   tasks:
-    - name: Find log files modified in the last 5 minutes
+    - name: Find specified log files modified in the last 5 minutes
       find:
         paths: /app/supervisor/logs
-        patterns: '*.log'
+        patterns: 'apache_httpd_stdout.log,apache_httpd_stderr.log,apache_tomcat_stdout.log,apache_tomcat_stderr.log'
         age: 5m
         age_stamp: mtime
       register: recent_log_files
@@ -23,4 +22,4 @@
     - name: Fail the job if errors are found in any log file
       ansible.builtin.fail:
         msg: "Errors found in log files"
-      when: grep_output.results | someattr('rc == 1')
+      when: grep_output.results | map(attribute='rc') | selectattr('equalto', 1) | list | length > 0
