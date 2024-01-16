@@ -1,52 +1,74 @@
-#!/bin/bash
+Option Explicit
 
-# Function to check if required dependencies are installed
-check_dependencies() {
-    local missing_deps=0
-    for dep in curl openssl dig nslookup; do
-        if ! command -v "$dep" &> /dev/null; then
-            echo "Dependency missing: $dep"
-            missing_deps=$((missing_deps + 1))
-        fi
-    done
+Dim objFSO, objTextFile
+Dim strLine, strCommand, strNsLookupResult, strIP, strHostname
+Dim objShell, objExecObject
+Dim outputFile, htmlContent
 
-    if [ "$missing_deps" -ne 0 ]; then
-        echo "Please install missing dependencies before running the script."
-        exit 1
-    fi
-}
+' File containing URLs
+Const urlListFile = "url_list_file.txt"
+' Output HTML File
+Const outputHtml = "output.html"
 
-# Check dependencies
-check_dependencies
+' Create FileSystemObject
+Set objFSO = CreateObject("Scripting.FileSystemObject")
 
-# Output HTML file
-output_html="output_ssl_check.html"
+' Check if URL list file exists
+If Not objFSO.FileExists(urlListFile) Then
+    WScript.Echo "URL list file not found: " & urlListFile
+    WScript.Quit
+End If
 
-# Start HTML file
-echo "<html><body><table border='1'><tr><th>URL</th><th>Status (Secure)</th><th>Status (Insecure)</th><th>IP</th><th>Hostname</th><th>SSL Expiry</th></tr>" > "$output_html"
+' Open the URL list file
+Set objTextFile = objFSO.OpenTextFile(urlListFile, 1)
 
-# Read each line in url_file.txt
-while IFS= read -r url
-do
-    # Get the HTTP status code with SSL validation
-    status_secure=$(curl -o /dev/null -s -w "%{http_code}" "$url")
+' Prepare HTML content
+htmlContent = "<html><body><table border='1'><tr><th>URL</th><th>IP Address</th><th>Hostname</th></tr>"
 
-    # Get the HTTP status code without SSL validation
-    status_insecure=$(curl -o /dev/null -s -w "%{http_code}" --insecure "$url")
+' Create WScript Shell object
+Set objShell = WScript.CreateObject("WScript.Shell")
 
-    # Extract IP and hostname
-    ip=$(dig +short "$url" | head -n 1)
-    hostname=$(nslookup "$ip" | awk '/name = / {print $4}' | sed 's/.$//')
+' Read each URL and perform nslookup
+Do While objTextFile.AtEndOfStream <> True
+    strLine = objTextFile.ReadLine
 
-    # Extract SSL Certificate Expiry Date
-    ssl_expiry=$(echo | openssl s_client -servername "${url#*//}" -connect "${url#*//}":443 2>/dev/null | openssl x509 -noout -dates | grep 'notAfter=' | cut -d= -f2)
+    ' First nslookup to get IP Address
+    strCommand = "nslookup " & strLine
+    Set objExecObject = objShell.Exec("%COMSPEC% /c " & strCommand)
+    strNsLookupResult = objExecObject.StdOut.ReadAll
+    strIP = ExtractValue(strNsLookupResult, "Address: ", 2) ' Get the second address
 
-    # Log the results
-    echo "<tr><td>$url</td><td>$status_secure</td><td>$status_insecure</td><td>$ip</td><td>$hostname</td><td>$ssl_expiry</td></tr>" >> "$output_html"
+    If strIP <> "" Then
+        ' Second nslookup to get Hostname
+        strCommand = "nslookup " & strIP
+        Set objExecObject = objShell.Exec("%COMSPEC% /c " & strCommand)
+        strNsLookupResult = objExecObject.StdOut.ReadAll
+        strHostname = ExtractValue(strNsLookupResult, "Name: ")
+    Else
+        strHostname = "Not Found"
+    End If
 
-done < "url_file.txt"
+    ' Append to HTML content
+    htmlContent = htmlContent & "<tr><td>" & strLine & "</td><td>" & strIP & "</td><td>" & strHostname & "</td></tr>"
+Loop
 
-# End HTML file
-echo "</table></body></html>" >> "$output_html"
+' Close the file
+objTextFile.Close
 
-echo "Report generated: $output_html"
+' Finalize HTML content
+htmlContent = htmlContent & "</table></body></html>"
+
+' Write the HTML file
+Set outputFile = objFSO.CreateTextFile(outputHtml, True)
+outputFile.WriteLine(htmlContent)
+outputFile.Close
+
+' Function to extract specific value from nslookup result
+Function ExtractValue(result, label, Optional occurrence = 1)
+    Dim lines, line, i, count
+    ExtractValue = ""
+    lines = Split(result, vbCrLf)
+    count = 0
+    For i = 0 To UBound(lines)
+        line = Trim(lines(i))
+        If InStr(line, label) >
