@@ -1,0 +1,39 @@
+- name: Move authorized_keys and log activities
+  hosts: all
+  gather_facts: yes
+  tasks:
+    - name: List contents of /home/zsyve41/.ssh before move
+      command: ls -ltr /home/zsyve41/.ssh
+      register: before_move_ssh
+
+    - name: List contents of /banktools/sshkeys/ssh/zsyve41 before move
+      command: ls -ltr /banktools/sshkeys/ssh/zsyve41
+      register: before_move_banktools
+
+    - name: Move authorized_keys file
+      command: mv /home/zsyve41/.ssh/authorized_keys /banktools/sshkeys/ssh/zsyve41/
+      ignore_errors: yes
+
+    - name: List contents of /home/zsyve41/.ssh after move
+      command: ls -ltr /home/zsyve41/.ssh
+      register: after_move_ssh
+
+    - name: List contents of /banktools/sshkeys/ssh/zsyve41 after move
+      command: ls -ltr /banktools/sshkeys/ssh/zsyve41
+      register: after_move_banktools
+
+    - name: Save results to log file
+      copy:
+        content: |
+          Hostname: {{ ansible_hostname }}
+          IP Address: {{ ansible_default_ipv4.address }}
+          Before Move (/home/zsyve41/.ssh):
+          {{ before_move_ssh.stdout }}
+          Before Move (/banktools/sshkeys/ssh/zsyve41):
+          {{ before_move_banktools.stdout }}
+          After Move (/home/zsyve41/.ssh):
+          {{ after_move_ssh.stdout }}
+          After Move (/banktools/sshkeys/ssh/zsyve41):
+          {{ after_move_banktools.stdout }}
+        dest: /tmp/OS_keys_violations.log
+        mode: '0755'
