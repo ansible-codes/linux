@@ -1,54 +1,39 @@
----
-- name: Execute Linux commands and perform directory and file checks
-  hosts: your_target_hosts
-  become: yes  # Only use 'become' if you need to execute tasks as a superuser
+- name: Move authorized_keys and log activities
+  hosts: all
+  gather_facts: yes
   tasks:
-    - name: Execute 'hostname -a'
-      command: hostname -a
-      register: hostname_output
+    - name: List contents of /home/zsyve41/.ssh before move
+      command: ls -ltr /home/zsyve41/.ssh
+      register: before_move_ssh
 
-    - name: Execute 'ls -l'
-      command: ls -l
-      register: ls_output
+    - name: List contents of /banktools/sshkeys/ssh/zsyve41 before move
+      command: ls -ltr /banktools/sshkeys/ssh/zsyve41
+      register: before_move_banktools
 
-    - name: Execute 'date'
-      command: date
-      register: date_output
+    - name: Move authorized_keys file
+      command: mv /home/zsyve41/.ssh/authorized_keys /banktools/sshkeys/ssh/zsyve41/
+      ignore_errors: yes
 
-    - name: Execute 'cp -p'
-      command: cp -p /path/to/source /path/to/destination
-      # Replace '/path/to/source' and '/path/to/destination' with actual paths
+    - name: List contents of /home/zsyve41/.ssh after move
+      command: ls -ltr /home/zsyve41/.ssh
+      register: after_move_ssh
 
-    - name: Check if directory 'dir1' exists
-      stat: 
-        path: /path/to/dir1
-      register: dir1_stat
-      # Replace '/path/to/dir1' with the actual path of 'dir1'
+    - name: List contents of /banktools/sshkeys/ssh/zsyve41 after move
+      command: ls -ltr /banktools/sshkeys/ssh/zsyve41
+      register: after_move_banktools
 
-    - name: Check if directory 'dir2' exists
-      stat: 
-        path: /path/to/dir2
-      register: dir2_stat
-      # Replace '/path/to/dir2' with the actual path of 'dir2'
-
-    - name: Check if directory 'dir3' exists
-      stat: 
-        path: /path/to/dir3
-      register: dir3_stat
-      # Replace '/path/to/dir3' with the actual path of 'dir3'
-
-    - name: Check permissions of '/ssh/authorized_keys'
-      stat: 
-        path: /ssh/authorized_keys
-      register: ssh_auth_keys_stat
-
-    - name: Display command outputs
-      debug:
-        msg: 
-          - "Hostname output: {{ hostname_output.stdout }}"
-          - "LS output: {{ ls_output.stdout }}"
-          - "Date output: {{ date_output.stdout }}"
-          - "Dir1 exists: {{ dir1_stat.stat.exists }}"
-          - "Dir2 exists: {{ dir2_stat.stat.exists }}"
-          - "Dir3 exists: {{ dir3_stat.stat.exists }}"
-          - "'/ssh/authorized_keys' permissions: {{ ssh_auth_keys_stat.stat.mode }}"
+    - name: Save results to log file
+      copy:
+        content: |
+          Hostname: {{ ansible_hostname }}
+          IP Address: {{ ansible_default_ipv4.address }}
+          Before Move (/home/zsyve41/.ssh):
+          {{ before_move_ssh.stdout }}
+          Before Move (/banktools/sshkeys/ssh/zsyve41):
+          {{ before_move_banktools.stdout }}
+          After Move (/home/zsyve41/.ssh):
+          {{ after_move_ssh.stdout }}
+          After Move (/banktools/sshkeys/ssh/zsyve41):
+          {{ after_move_banktools.stdout }}
+        dest: /tmp/OS_keys_violations.log
+        mode: '0755'
