@@ -1,0 +1,39 @@
+# Apache Errors
+Error: "404 Not Found"
+Solution: The requested resource is not available. Check the URL spelling, file existence, or .htaccess rewrite rules.
+
+Error: "403 Forbidden"
+Solution: Access to the resource on the server is denied. Check directory permissions and .htaccess configurations.
+
+Error: "500 Internal Server Error"
+Solution: Generic server error. Check Apache error logs for specific details.
+
+# Tomcat Errors
+Error: "SEVERE: A child container failed during start"
+Solution: Tomcat startup issue. Check for port conflicts or misconfigurations in server.xml.
+
+Error: "java.lang.OutOfMemoryError: Java heap space"
+Solution: Java heap space is insufficient. Increase heap size in catalina.sh or set CATALINA_OPTS.
+
+Error: "ClassNotFoundException"
+Solution: Required Java class not found. Ensure all necessary libraries are included in CLASSPATH.
+
+# Oracle Errors
+Error: "ORA-12154: TNS:could not resolve the connect identifier specified"
+Solution: Issue with SQLNet configuration. Check tnsnames.ora file.
+
+Error: "ORA-12560: TNS:protocol adapter error"
+Solution: Generic Oracle connection error. Ensure Oracle services are running and listener is configured correctly.
+
+Error: "ORA-04031: unable to allocate bytes of shared memory"
+Solution: Shared memory issue. Increase the size of the SGA or PGA.
+
+# Java Errors
+Error: "NullPointerException"
+Solution: Attempting to use an object reference that has the null value. Check object initialization before use.
+
+Error: "ClassNotFoundException"
+Solution: Unable to find a class. Check classpath and JAR dependencies.
+
+Error: "ArrayIndexOutOfBoundsException"
+Solution: Array index is out-of-bounds. Ensure array indices are within the array size.
