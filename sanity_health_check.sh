@@ -9,6 +9,24 @@ TNSNAMES_FILE="/path/to/tnsnames.ora"
 # Apache httpd.conf file path
 HTTPD_CONF_FILE="/path/to/httpd.conf"
 
+# Function to check if a process is running and get its PID
+check_process() {
+    process_name=$1
+    pid=$(ps -ef | grep "$process_name" | grep -v grep | awk '{print $2}' | head -1)
+
+    if [ -n "$pid" ]; then
+        echo "$process_name is running. PID: $pid"
+    else
+        echo "$process_name is not running."
+    fi
+}
+
+# Check Apache HTTP - adjust the process name if necessary
+check_process "httpd"
+
+# Check Tomcat - adjust the process name if necessary
+check_process "tomcat"
+
 # Function to check service status
 check_service_status() {
     service_name=$1
