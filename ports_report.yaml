@@ -1,0 +1,25 @@
+---
+- name: List and Report Enabled Ports on RedHat Linux
+  hosts: all
+ #become: yes
+  tasks:
+    - name: Retrieve list of open ports from firewall-cmd
+      ansible.builtin.shell: firewall-cmd --zone=public --list-ports
+      register: open_ports_firewall
+
+    - name: Check the status of each open port from firewall-cmd
+      ansible.builtin.shell: echo "firewall-cmd: {{ item }} is open" | tee -a /tmp/ports_enabled.log
+      loop: "{{ open_ports_firewall.stdout_lines }}"
+
+    - name: Retrieve list of open ports using netstat
+      ansible.builtin.shell: netstat -tuln | grep LISTEN
+      register: open_ports_netstat
+
+    - name: Append netstat results to the log file
+      ansible.builtin.shell: echo "{{ open_ports_netstat.stdout }}" >> /tmp/ports_enabled.log
+
+    - name: Fetch the report file to local machine
+      ansible.builtin.fetch:
+        src: /tmp/ports_enabled.log
+        dest: ./ports_enabled.log
+        flat: yes
