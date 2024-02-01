@@ -1,0 +1,31 @@
+---
+- name: Setup Python environment and prepare application directory
+  hosts: all
+  become: yes  # This is required to ensure you have the necessary permissions to create directories and install packages
+  tasks:
+    - name: Ensure the directory /app/python-ve exists
+      ansible.builtin.file:
+        path: /app/python-ve
+        state: directory
+        mode: '0755'  # Adjust the mode as necessary
+
+    - name: Upgrade pip
+      ansible.builtin.shell: |
+        /efs/dist/python/core/3.9.16/exec/python3 -m pip install --upgrade pip
+      args:
+        executable: /bin/bash
+      become: yes  # Ensure the command is run with elevated privileges
+
+    - name: Install selinux package
+      ansible.builtin.shell: |
+        /efs/dist/python/core/3.9.16/exec/python3 -m pip install selinux
+      args:
+        executable: /bin/bash
+      become: yes
+
+    - name: Ensure the directory /app/tomcat/webapps/griffin_portal_old/WEB-INF/classes exists
+      ansible.builtin.file:
+        path: /app/tomcat/webapps/griffin_portal_old/WEB-INF/classes
+        state: directory
+        mode: '0755'  # Adjust the mode as necessary
+      become: yes  # This task also requires elevated privileges to ensure the directory can be created
