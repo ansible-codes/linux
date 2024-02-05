@@ -1,0 +1,25 @@
+- name: Synchronize directories from origin to destiny
+  hosts: "{{ origin_host }}"
+  tasks:
+    - name: Synchronize entire directory to the destiny host
+      synchronize:
+        src: /app/
+        dest: /app/
+        recursive: yes
+        delete: no # Set to yes if you want to delete extraneous files from dest dirs
+        rsync_opts:
+          - "-avz"
+      delegate_to: "{{ origin_host }}"
+      become: yes # Use sudo, set to no if not required
+
+- name: Trigger on the destiny host to set correct permissions (optional)
+  hosts: "{{ destiny_host }}"
+  tasks:
+    - name: Set correct permissions on the destination directory
+      file:
+        path: /app/
+        state: directory
+        owner: your_owner
+        group: your_group
+        mode: '0755'
+      become: yes # Use sudo, set to no if not required
