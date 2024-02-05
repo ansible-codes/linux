@@ -1,14 +1,16 @@
-- name: Copy /app directory from origin to destiny host
+- name: Copy directory from origin to destiny host using SCP
   hosts: all
   gather_facts: no
   vars:
-    origin_host: origin_host_ssh_details # e.g., user@host1
-    destiny_host: destiny_host_ssh_details # e.g., user@host2
-    origin_path: /app/
-    destiny_path: /app/
+    origin_host: "example_origin_host"
+    host_destiny: "example_dest_host"
+    userID: "yourUserID"
+    directory_source: "/path/to/source_directory"  # Source directory on origin_host
+    directory_destination: "/path/to/destination_directory"  # Destination directory on host_destiny
+
   tasks:
-    - name: Rsync from origin to destiny host
-      command: >
-        rsync -avz -e "ssh -o StrictHostKeyChecking=no" --rsync-path="sudo rsync"
-        {{ origin_host }}:{{ origin_path }} {{ destiny_host }}:{{ destiny_path }}
-      delegate_to: localhost
+    - name: SCP directory from origin to destiny
+      ansible.builtin.command:
+        cmd: "scp -rp {{ directory_source }} {{ userID }}@{{ host_destiny }}:{{ directory_destination }}"
+      delegate_to: "{{ origin_host }}"
+      when: inventory_hostname == origin_host
