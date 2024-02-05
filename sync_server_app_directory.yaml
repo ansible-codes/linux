@@ -1,25 +1,14 @@
-- name: Synchronize directories from origin to destiny
-  hosts: "{{ origin_host }}"
+- name: Copy /app directory from origin to destiny host
+  hosts: all
+  gather_facts: no
+  vars:
+    origin_host: origin_host_ssh_details # e.g., user@host1
+    destiny_host: destiny_host_ssh_details # e.g., user@host2
+    origin_path: /app/
+    destiny_path: /app/
   tasks:
-    - name: Synchronize entire directory to the destiny host
-      synchronize:
-        src: /app/
-        dest: /app/
-        recursive: yes
-        delete: no # Set to yes if you want to delete extraneous files from dest dirs
-        rsync_opts:
-          - "-avz"
-      delegate_to: "{{ origin_host }}"
-      become: yes # Use sudo, set to no if not required
-
-- name: Trigger on the destiny host to set correct permissions (optional)
-  hosts: "{{ destiny_host }}"
-  tasks:
-    - name: Set correct permissions on the destination directory
-      file:
-        path: /app/
-        state: directory
-        owner: your_owner
-        group: your_group
-        mode: '0755'
-      become: yes # Use sudo, set to no if not required
+    - name: Rsync from origin to destiny host
+      command: >
+        rsync -avz -e "ssh -o StrictHostKeyChecking=no" --rsync-path="sudo rsync"
+        {{ origin_host }}:{{ origin_path }} {{ destiny_host }}:{{ destiny_path }}
+      delegate_to: localhost
