@@ -1,0 +1,27 @@
+---
+- name: Force Delete Directory with Wait Playbook
+  hosts: your_target_group_or_host
+  become: yes
+  tasks:
+    - name: Wait for a specific condition before deletion
+      ansible.builtin.wait_for:
+        path: "/path/to/your/directory/some_file"
+        state: absent
+        timeout: 60  # Adjust the timeout as necessary
+      ignore_errors: yes  # Optional, to proceed even if the condition isn't met
+
+    - name: Forcefully remove a directory
+      ansible.builtin.file:
+        path: "/path/to/your/directory"
+        state: absent
+        force: yes
+
+    - name: Ensure the directory is deleted
+      ansible.builtin.stat:
+        path: "/path/to/your/directory"
+      register: dir_status
+
+    - name: Verify directory deletion
+      ansible.builtin.fail:
+        msg: "Directory was not deleted"
+      when: dir_status.stat.exists
