@@ -1,0 +1,14 @@
+- name: Check if .war file exists
+  ansible.builtin.stat:
+    path: "{{ tomcat_root }}/{{ application_context }}.war"
+  register: war_file_stat
+
+- name: Print message if .war file exists
+  ansible.builtin.debug:
+    msg: "The .war file exists."
+  when: war_file_stat.stat.exists
+
+- name: Print message if .war file does not exist
+  ansible.builtin.debug:
+    msg: "The .war file does not exist."
+  when: not war_file_stat.stat.exists
