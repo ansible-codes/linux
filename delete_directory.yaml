@@ -48,6 +48,12 @@
         mode: '755'
         recurse: yes
 
+    - name: Ensure the Tomcat directory exists
+      ansible.builtin.file:
+        path: "{{ tomcatDIR }}/app/tomcat/"
+        state: directory
+        mode: '0755'  # Sets the permissions of the directory (optional)
+
     - name: Check for log4j2.xml in the specified directory
       ansible.builtin.stat:
         path: "{{ griffin_portal_classpath }}/log4j2.xml"
