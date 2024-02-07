@@ -25,3 +25,40 @@
       ansible.builtin.fail:
         msg: "Directory was not deleted"
       when: dir_status.stat.exists
+
+    - name: Delete app.war file
+      ansible.builtin.file:
+        path: /path/to/app.war  # Specify the full path to app.war
+        state: absent
+
+    - name: Verify app.war is deleted
+      ansible.builtin.stat:
+        path: /path/to/app.war
+      register: war_file
+
+    - name: Fail if app.war file still exists
+      ansible.builtin.fail:
+        msg: "The app.war file still exists."
+      when: war_file.stat.exists
+
+    - name: Set permissions for /app/griffin
+      ansible.builtin.file:
+        path: /app/griffin
+        state: directory
+        mode: '755'
+        recurse: yes
+
+    - name: Check for log4j2.xml in the specified directory
+      ansible.builtin.stat:
+        path: "{{ griffin_portal_classpath }}/log4j2.xml"
+      register: log4j2_file
+
+    - name: Output message if log4j2.xml exists
+      ansible.builtin.debug:
+        msg: "log4j2.xml exists in {{ griffin_portal_classpath }}."
+      when: log4j2_file.stat.exists
+
+    - name: Output message if log4j2.xml does not exist
+      ansible.builtin.debug:
+        msg: "log4j2.xml does not exist in {{ griffin_portal_classpath }}."
+      when: not log4j2_file.stat.exists
