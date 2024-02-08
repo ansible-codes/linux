@@ -68,3 +68,21 @@
       ansible.builtin.debug:
         msg: "log4j2.xml does not exist in {{ griffin_portal_classpath }}."
       when: not log4j2_file.stat.exists
+
+- name: Check directory existence playbook
+  hosts: all
+  tasks:
+    - name: Check if the directory exists
+      ansible.builtin.stat:
+        path: /app/tomcat
+      register: dir_stat
+
+    - name: Fail if the directory does not exist
+      ansible.builtin.fail:
+        msg: "Directory does not exist: /app/tomcat"
+      when: not dir_stat.stat.exists
+
+    - name: Print message if the directory exists
+      ansible.builtin.debug:
+        msg: "Directory exists: /app/tomcat"
+      when: dir_stat.stat.exists
