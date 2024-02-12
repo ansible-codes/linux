@@ -1,0 +1,24 @@
+- name: Execute and log ad-hoc command
+  hosts: all
+  gather_facts: no
+  vars_prompt:
+    - name: linux_command
+      prompt: "Enter the Linux command to execute"
+      private: no
+
+  tasks:
+    - name: Execute the Linux command
+      ansible.builtin.shell: "{{ linux_command }}"
+      register: command_output
+      ignore_errors: true
+
+    - name: Show command output
+      ansible.builtin.debug:
+        msg: "{{ command_output.stdout }}"
+
+    - name: Log command output to file
+      ansible.builtin.lineinfile:
+        path: /tmp/adhoc_command.log
+        line: "{{ linux_command }} | Output: {{ command_output.stdout }}"
+        create: yes
+        mode: '0755'
