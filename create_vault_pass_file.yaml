@@ -8,6 +8,18 @@
       private: yes
 
   tasks:
+    - name: Create /app/ansible directory
+      ansible.builtin.file:
+        path: /app/ansible
+        state: directory
+        mode: '0755'
+
+    - name: Create vaultPass.conf file
+      ansible.builtin.file:
+        path: /app/ansible/vaultPass.conf
+        state: touch
+        mode: '0600'
+
     - name: Ensure the directory exists
       ansible.builtin.file:
         path: /app/ansible
@@ -20,3 +32,28 @@
         dest: /app/ansible/vaultPass.conf
         mode: '0600'
       delegate_to: localhost
+
+    - name: Check directory permissions
+      ansible.builtin.stat:
+        path: /app/ansible
+      register: dir_stat
+
+    - name: Check file permissions and if it's empty
+      ansible.builtin.stat:
+        path: /app/ansible/vaultPass.conf
+      register: file_stat
+
+    - name: Fail if directory permissions are not 755
+      ansible.builtin.fail:
+        msg: "Directory permissions are not 755"
+      when: "('0755' not in dir_stat.stat.mode)"
+
+    - name: Fail if file permissions are not 600
+      ansible.builtin.fail:
+        msg: "File permissions are not 600"
+      when: "('0600' not in file_stat.stat.mode)"
+
+    - name: Fail if vaultPass.conf is empty
+      ansible.builtin.fail:
+        msg: "vaultPass.conf file is empty"
+      when: file_stat.stat.size == 0
