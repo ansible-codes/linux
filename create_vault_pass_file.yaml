@@ -1,0 +1,22 @@
+---
+- name: Create Vault Password File
+  hosts: localhost
+  gather_facts: no
+  vars_prompt:
+    - name: vault_password
+      prompt: "Enter the Vault password"
+      private: yes
+
+  tasks:
+    - name: Ensure the directory exists
+      ansible.builtin.file:
+        path: /app/ansible
+        state: directory
+        mode: '0755'
+
+    - name: Write Vault password to file
+      ansible.builtin.copy:
+        content: "{{ vault_password }}"
+        dest: /app/ansible/vaultPass.conf
+        mode: '0600'
+      delegate_to: localhost
