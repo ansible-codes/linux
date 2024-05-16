@@ -25,11 +25,25 @@ vmstat -s >> $OUTPUT_FILE
 
 # Tomcat Memory Usage (assuming tomcat is the process name)
 write_section_header "Tomcat Memory Usage"
-ps aux | grep '[t]omcat' | awk '{print $2}' | xargs -I {} pmap {} | grep total >> $OUTPUT_FILE
+TOMCAT_PIDS=$(pgrep -f tomcat)
+if [ -z "$TOMCAT_PIDS" ]; then
+    echo "Tomcat is not running." >> $OUTPUT_FILE
+else
+    for PID in $TOMCAT_PIDS; do
+        pmap $PID | grep total >> $OUTPUT_FILE
+    done
+fi
 
 # HTTP Memory Usage (assuming httpd is the process name)
 write_section_header "HTTP Memory Usage"
-ps aux | grep '[h]ttpd' | awk '{print $2}' | xargs -I {} pmap {} | grep total >> $OUTPUT_FILE
+HTTPD_PIDS=$(pgrep -f httpd)
+if [ -z "$HTTPD_PIDS" ]; then
+    echo "HTTPD is not running." >> $OUTPUT_FILE
+else
+    for PID in $HTTPD_PIDS; do
+        pmap $PID | grep total >> $OUTPUT_FILE
+    done
+fi
 
 # OS Health
 write_section_header "OS Health"
@@ -55,7 +69,7 @@ sar -u 1 3 >> $OUTPUT_FILE
 
 # Top Command Output
 write_section_header "Top Command Output"
-top -bn1 >> $OUTPUT_FILE
+top -bn1 | head -n 20 >> $OUTPUT_FILE  # Capture only the first 20 lines of top output
 
 # Notify user
 echo "System report generated in $OUTPUT_FILE"
