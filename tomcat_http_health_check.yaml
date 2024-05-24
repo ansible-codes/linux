@@ -1,0 +1,104 @@
+- name: Health Check for Apache HTTP Server and Tomcat
+  hosts: all
+  become: yes
+  vars:
+    httpd_service: httpd
+    tomcat_service: tomcat
+    httpd_error_log: /var/log/httpd/error_log
+    httpd_access_log: /var/log/httpd/access_log
+    tomcat_catalina_out: /opt/tomcat/logs/catalina.out
+
+  tasks:
+    - name: Check CPU and Memory Usage
+      shell: |
+        top -b -n 1 | head -n 20
+        free -h
+      register: cpu_memory_usage
+
+    - name: Display CPU and Memory Usage
+      debug:
+        msg: "{{ cpu_memory_usage.stdout }}"
+
+    - name: Check Disk Usage
+      shell: |
+        df -h
+        df -i
+      register: disk_usage
+
+    - name: Display Disk Usage
+      debug:
+        msg: "{{ disk_usage.stdout }}"
+
+    - name: Check I/O Statistics
+      shell: iostat -xz 1 3
+      register: io_stats
+
+    - name: Display I/O Statistics
+      debug:
+        msg: "{{ io_stats.stdout }}"
+
+    - name: Check Apache HTTP Server status
+      service:
+        name: "{{ httpd_service }}"
+        state: started
+
+    - name: Display Apache HTTP Server status
+      command: systemctl status {{ httpd_service }}
+      register: apache_status
+
+    - name: Display Apache Status Output
+      debug:
+        msg: "{{ apache_status.stdout }}"
+
+    - name: Fetch Apache Server Status Page
+      uri:
+        url: http://localhost/server-status
+        return_content: yes
+      register: apache_server_status
+      ignore_errors: yes
+
+    - name: Display Apache Server Status Page
+      debug:
+        msg: "{{ apache_server_status.content }}"
+
+    - name: Check Apache HTTP Server logs
+      shell: |
+        tail -n 100 {{ httpd_error_log }}
+        tail -n 100 {{ httpd_access_log }}
+      register: apache_logs
+
+    - name: Display Apache HTTP Server logs
+      debug:
+        msg: "{{ apache_logs.stdout }}"
+
+    - name: Check Tomcat status
+      service:
+        name: "{{ tomcat_service }}"
+        state: started
+
+    - name: Display Tomcat status
+      command: systemctl status {{ tomcat_service }}
+      register: tomcat_status
+
+    - name: Display Tomcat Status Output
+      debug:
+        msg: "{{ tomcat_status.stdout }}"
+
+    - name: Fetch Tomcat Manager Status Page
+      uri:
+        url: http://localhost:8080/manager/status/all
+        return_content: yes
+      register: tomcat_manager_status
+      ignore_errors: yes
+
+    - name: Display Tomcat Manager Status Page
+      debug:
+        msg: "{{ tomcat_manager_status.content }}"
+
+    - name: Check Tomcat logs
+      shell: tail -n 100 {{ tomcat_catalina_out }}
+      register: tomcat_logs
+
+    - name: Display Tomcat logs
+      debug:
+        msg: "{{ tomcat_logs.stdout }}"
