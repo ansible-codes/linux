@@ -1,0 +1,133 @@
+To enhance the role by adding log rotation with a timestamp before truncating the logs, we'll modify the Ansible role to include these additional steps. Here’s how you can structure it:
+
+Directory Structure
+css
+Copy code
+truncate_logs_role/
+├── inventory
+├── playbook.yml
+└── roles/
+    └── truncate_logs/
+        ├── defaults/
+        │   └── main.yml
+        ├── tasks/
+        │   └── main.yml
+        ├── handlers/
+        │   └── main.yml
+        ├── meta/
+        │   └── main.yml
+        ├── files/
+        ├── templates/
+        └── vars/
+            └── main.yml
+Inventory File
+Create a file named inventory to define your target hosts:
+
+ini
+Copy code
+[servers]
+server1 ansible_host=your_server_ip ansible_user=your_user
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3
+Playbook File
+Create a playbook named playbook.yml that includes the role:
+
+yaml
+Copy code
+---
+- name: Truncate log files based on age and size
+  hosts: servers
+  become: yes
+  roles:
+    - truncate_logs
+Role Structure
+defaults/main.yml
+Create a file named main.yml in the defaults directory to set default variables:
+
+yaml
+Copy code
+log_paths:
+  - /path/to/log/files1
+  - /path/to/log/files2
+  - /path/to/log/files3
+log_age: 3d
+log_size: 10m
+timestamp_format: "%Y%m%d%H%M%S"
+tasks/main.yml
+Create a file named main.yml in the tasks directory for the main tasks:
+
+yaml
+Copy code
+---
+- name: Ensure log directory exists
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop: "{{ log_paths }}"
+
+- name: Find and rotate log files older than {{ log_age }}
+  find:
+    paths: "{{ item }}"
+    patterns: "*.log"
+    age: "{{ log_age }}"
+    recurse: yes
+  register: old_logs
+  loop: "{{ log_paths }}"
+
+- name: Rotate old log files
+  command: "mv {{ item.path }} {{ item.path }}.{{ lookup('pipe', 'date +'+timestamp_format) }}"
+  with_items: "{{ old_logs.results | selectattr('matched', 'gt', 0) | map(attribute='files') | list | flatten(levels=1) }}"
+  when: old_logs.matched > 0
+
+- name: Find and rotate log files larger than {{ log_size }}
+  find:
+    paths: "{{ item }}"
+    patterns: "*.log"
+    size: "{{ log_size }}"
+    recurse: yes
+  register: large_logs
+  loop: "{{ log_paths }}"
+
+- name: Rotate large log files
+  command: "mv {{ item.path }} {{ item.path }}.{{ lookup('pipe', 'date +'+timestamp_format) }}"
+  with_items: "{{ large_logs.results | selectattr('matched', 'gt', 0) | map(attribute='files') | list | flatten(levels=1) }}"
+  when: large_logs.matched > 0
+
+- name: Find and truncate log files older than {{ log_age }}
+  find:
+    paths: "{{ item }}"
+    patterns: "*.log"
+    age: "{{ log_age }}"
+    recurse: yes
+  register: old_logs
+  loop: "{{ log_paths }}"
+
+- name: Truncate old log files
+  command: "truncate -s 0 {{ item.path }}"
+  with_items: "{{ old_logs.results | selectattr('matched', 'gt', 0) | map(attribute='files') | list | flatten(levels=1) }}"
+  when: old_logs.matched > 0
+
+- name: Find and truncate log files larger than {{ log_size }}
+  find:
+    paths: "{{ item }}"
+    patterns: "*.log"
+    size: "{{ log_size }}"
+    recurse: yes
+  register: large_logs
+  loop: "{{ log_paths }}"
+
+- name: Truncate large log files
+  command: "truncate -s 0 {{ item.path }}"
+  with_items: "{{ large_logs.results | selectattr('matched', 'gt', 0) | map(attribute='files') | list | flatten(levels=1) }}"
+  when: large_logs.matched > 0
+Explanation
+Ensure log directory exists: Ensure the log directory exists for each path in log_paths.
+Find and rotate old log files: Use the find module to locate .log files older than 3 days and register the results. Rotate them by appending a timestamp.
+Rotate old log files: Move (rename) the old log files to include a timestamp in their filename.
+Find and rotate large log files: Use the find module to locate .log files larger than 10MB and register the results. Rotate them by appending a timestamp.
+Rotate large log files: Move (rename) the large log files to include a timestamp in their filename.
+Find and truncate old log files: Use the find module again to locate .log files older than 3 days and truncate them.
+Truncate old log files: Truncate the files found to zero size.
+Find and truncate large log files: Use the find module again to locate .log files larger than 10MB and truncate them.
+Truncate large log files: Truncate the files found to zero size.
